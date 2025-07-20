@@ -1,0 +1,58 @@
+name: GitHub Stats Card & Top Langs Card Update
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-cards:
+    name: Update Stats Cards
+    runs-on: ubuntu-latest
+    
+    # 这一步是关键，为 job 中的所有步骤授予写权限
+    # 这样 GITHUB_TOKEN 才能有权限推送到仓库
+    permissions:
+      contents: write 
+
+    steps:
+      # 步骤1：检出代码，这是必须的
+      - uses: actions/checkout@v3
+
+      # 步骤2和3：生成卡片（这部分保持不变）
+      - name: Generate GitHub Stats Card & Top Langs Card
+        uses: anuraghazra/github-readme-stats@master
+        with:
+          username: zheer-mao # !! 替换成你的 GitHub 用户名
+          # 你可以像之前一样在这里添加自定义参数
+          # theme: dracula
+          
+          # 注意：这里我们可以在一个步骤里生成所有卡片
+          # 只需在需要时指定 card_type
+          # 如果不指定 card_type，默认就是 stats card
+      - uses: anuraghazra/github-readme-stats@master
+        with:
+          username: zheer-mao # !! 替换成你的 GitHub 用户名
+          layout: 'compact'
+          card_type: 'top-langs' # 指定生成语言卡片
+
+      # 步骤4：移动生成的图片（这部分保持不变）
+      - name: Move generated images
+        run: |
+          mkdir -p ./generated
+          # -f 选项可以在文件已存在时强制覆盖，避免出错
+          mv -f stats.svg ./generated/stats.svg
+          mv -f top-langs.svg ./generated/top-langs.svg
+
+      # 步骤5：自动提交和推送（优化后的版本）
+      - name: Commit and Push updated cards
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: update stats and langs cards"
+          # 可选：指定文件模式，只提交特定文件
+          file_pattern: generated/*.svg
+          # 可选：指定提交的用户信息
+          commit_user_name: GitHub Actions
+          commit_user_email: actions@github.com
+          commit_author: GitHub Actions <actions@github.com>
+
