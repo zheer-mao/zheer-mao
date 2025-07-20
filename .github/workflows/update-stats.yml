@@ -1,51 +1,48 @@
-name: GitHub Stats Card & Top Langs Card Update
+# .github/workflows/metrics.yml
+# (文件名可以自定义，比如 metrics.yml)
+
+name: Metrics Readme Card Update
 
 on:
+  # 每天运行一次
   schedule:
-    # 每天凌晨（UTC时间）运行一次
     - cron: '0 0 * * *'
-  # 允许在 Actions 标签页手动触发
+  # 允许手动触发
   workflow_dispatch:
 
 jobs:
-  update-cards:
-    name: Update Stats Cards
+  metrics:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # 授予 GITHUB_TOKEN 写权限
+      contents: write # 必须要有写权限来提交生成的图片
 
     steps:
-      # 步骤1：检出你的仓库代码
-      - uses: actions/checkout@v3
-
-      # 步骤2：使用正确的 Action 生成统计卡片
-      - name: Generate and Commit Stats Cards
-        uses: rickstaa/action-readme-stats@v1 # <-- 使用这个正确的 Action
+      - name: Generate metrics card
+        uses: lowlighter/metrics@latest # <-- 使用这个 Action
         with:
-          # --- 必要参数 ---
-          USERNAME: ${{ github.repository_owner }} # 自动获取仓库所有者作为用户名
+          # 你的 GitHub 用户名
+          user: ${{ github.repository_owner }}
 
-          # --- 卡片开关 ---
-          # 确保这两种卡片都被生成
-          STATS_CARD_NEEDED: true
-          LANG_CARD_NEEDED: true
-
-          # --- 自定义选项 (和 URL 参数类似) ---
-          # 统计卡片自定义
-          STATS_CARD_THEME: dracula
-          STATS_CARD_SHOW_ICONS: true
-          # 语言卡片自定义
-          LANG_CARD_LAYOUT: compact
-          LANG_CARD_THEME: radical
+          # 要使用的 Token， GITHUB_TOKEN 是最安全的
+          token: ${{ secrets.GITHUB_TOKEN }}
           
-          # --- 提交设置 ---
-          # Action 会自动处理提交，无需手动 commit
-          COMMIT_MESSAGE: "chore: update readme stats"
-          COMMIT_USER: "GitHub Actions"
-          COMMIT_EMAIL: "actions@github.com"
-          
-          # --- 输出路径 ---
-          # 定义生成的 SVG 文件存放的位置和名称
-          STATS_CARD_PATH: 'generated/stats.svg'
-          LANG_CARD_PATH: 'generated/top-langs.svg'
+          # 仓库的 Token，用于分析 stargazers 等，也是用 GITHUB_TOKEN
+          committer_token: ${{ secrets.GITHUB_TOKEN }}
 
+          # 输出文件的路径和名称
+          # 我们生成一张图片，包含所有信息
+          filename: generated/metrics.svg
+
+          # ----------- 自定义配置 -----------
+          # 基础设置
+          base: header, activity, community, repositories, metadata
+          
+          # 要启用的插件
+          # 每个插件都有丰富的自定义选项
+          plugin_lines: yes               # 显示代码行数统计
+          plugin_languages: yes           # 显示最常用的语言
+          plugin_languages_details: bytes-size, percentage # 语言统计的维度
+          plugin_languages_limit: 8       # 最多显示 8 种语言
+          
+          # 主题和布局
+          config_timezone: Asia/Shanghai  # 设置时区，例如中国上海
