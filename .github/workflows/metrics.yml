@@ -1,0 +1,50 @@
+name: GitHub Metrics
+on:
+  # 每天凌晨运行
+  schedule:
+    - cron: "0 0 * * *"
+  # 允许手动触发
+  workflow_dispatch:
+  # 在推送到主分支时也触发
+  push:
+    branches:
+      - main
+      - master
+ 
+jobs:
+  generate-metrics:
+    runs-on: ubuntu-latest
+    # 关键：为内置的 GITHUB_TOKEN 授予写权限
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Generate metrics
+        uses: lowlighter/metrics@latest
+        with:
+          # 关键：使用内置、安全的 GITHUB_TOKEN，不再需要手动创建 PAT
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # 你的用户名，自动获取，无需硬编码
+          user: ${{ github.repository_owner }}
+          
+          # 定义生成的图片存放位置
+          filename: generated/metrics.svg
+ 
+          # ----------- 插件和配置 (整合了你原有的优秀配置) -----------
+          # 基础模块
+          base: header, activity, community, repositories, metadata
+          
+          # 语言统计插件
+          plugin_languages: yes
+          plugin_languages_limit: 8
+          plugin_languages_threshold: 0%
+          plugin_languages_colors: "github"
+          plugin_languages_sections: "most-used"
+          plugin_languages_details: "bytes-size, percentage"
+          
+          # 额外增加一个代码行数统计插件，效果很好
+          plugin_lines: yes
+          
+          # 配置时区，让活动图更准确
+          config_timezone: Asia/Shanghai
